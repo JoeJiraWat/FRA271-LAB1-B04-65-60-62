@@ -1,0 +1,66 @@
+% =========================================================================
+% MATLAB Automation Script: Run Simulink 5 Times & Export Signals to Paths
+% =========================================================================
+
+% 1. กำหนดชื่อ Simulink Model (ไม่ต้องใส่ .slx)
+model_name = 'sensorExpoler'; % << เปลี่ยนเป็นชื่อไฟล์ Simulink ของคุณ
+
+% 2. ตั้งค่า Path สำหรับเก็บไฟล์ของแต่ละสัญญาณ A0, A1, A2
+%    (ใส่ Path ที่คุณต้องการ เช่น 'C:\LabData\A0')
+path_A0 = 'D:\Lab1.2_rmx\Flip_magnatics\shiel\2.6';
+%path_A0 = 'D:\Lab1.2_rmx\Flip_magnatics\shiel\0';
+%path_A1 = 'D:\Lab1.1_rmx\Linear\RAW_typeA\6';
+%path_A2 = 'D:\Lab1.1_rmx\Linear\RAW_typeA\6';
+
+% สร้างโฟลเดอร์อัตโนมัติหากยังไม่มีโฟลเดอร์ปลายทาง
+if ~exist(path_A0, 'dir'), mkdir(path_A0); end
+if ~exist(path_A1, 'dir'), mkdir(path_A1); end
+if ~exist(path_A2, 'dir'), mkdir(path_A2); end
+
+% 3. ตรวจสอบว่าเปิดไฟล์ Simulink ไว้หรือยัง
+if ~bdIsLoaded(model_name)
+    open_system(model_name);
+end
+
+% =========================================================================
+% 4. เริ่ม Loop การรัน Simulation จำนวน 5 รอบ
+% =========================================================================
+num_runs = 5;
+
+for i = 1:num_runs
+    fprintf('--------------------------------------------------\n');
+    fprintf('กำลังเริ่มบันทึกรอบที่ %d / %d ...\n', i, num_runs);
+
+    % สั่งให้ Simulink เริ่ม Run และรอจนกว่าจะรันเสร็จ
+    simOut = sim(model_name);
+
+    % ดึงข้อมูล LogsOut (ข้อมูล Logged Signals จาก Simulink)
+    logs = simOut.logsout;
+
+    % ดึงข้อมูลแต่ละสัญญาณ
+    sig_A0 = logs.get('A0').Values;
+    %sig_A1 = logs.get('A1').Values;
+    %sig_A2 = logs.get('A2').Values;
+
+    % ---------------------------------------------------------------------
+    % บันทึกไฟล์ A0 (ชื่อไฟล์: 1.mat, 2.mat, ..., 5.mat)
+    file_A0 = fullfile(path_A0, sprintf('%d.mat', i));
+    save(file_A0, 'sig_A0');
+    fprintf('  -> บันทึก A0 รอบที่ %d เรียบร้อย: %s\n', i, file_A0);
+
+    % บันทึกไฟล์ A1 (ชื่อไฟล์: 1.mat, 2.mat, ..., 5.mat)
+    %file_A1 = fullfile(path_A1, sprintf('%d.mat', i));
+    %save(file_A1, 'sig_A1');
+    %fprintf('  -> บันทึก A1 รอบที่ %d เรียบร้อย: %s\n', i, file_A1);
+
+    % บันทึกไฟล์ A2 (ชื่อไฟล์: 1.mat, 2.mat, ..., 5.mat)
+    %file_A2 = fullfile(path_A2, sprintf('%d.mat', i));
+    %save(file_A2, 'sig_A2');
+    %fprintf('  -> บันทึก A2 รอบที่ %d เรียบร้อย: %s\n', i, file_A2);
+
+    % เว้นช่วง 1 วินาทีก่อนเริ่มรอบถัดไป
+    pause(1);
+end
+
+fprintf('--------------------------------------------------\n');
+fprintf('บันทึกข้อมูลครบทั้ง 5 รอบเรียบร้อยแล้วครับ!\n');
